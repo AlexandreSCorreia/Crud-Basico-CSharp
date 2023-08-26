@@ -1,0 +1,272 @@
+﻿<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+     <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Sora:wght@400;600&display=swap" rel="stylesheet"> 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+    integrity="sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <title>@ViewData["Title"] - CRUD</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/jquery.dataTables.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" />
+
+    <style>
+        .group-icon
+        {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+            <div class="container">
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">CRUD</a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                    <ul class="navbar-nav flex-grow-1">
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="border-top footer text-muted">
+        <div class="container">
+            &copy; 2023 - CRUD - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/jquery.dataTables.min.js"></script> 
+    <script>
+     document.addEventListener("DOMContentLoaded", function() {
+  const tabelaUsuarios = $('#example').DataTable({
+    ajax: {
+      url: '/Home/Usuario',
+      dataSrc: ''
+    },
+    columns: [
+      { data: 'id' },
+      { 
+        data: 'imagem',
+        render: function (data, type, row, meta) 
+        {
+          return '<img src="../img/' + data + '" alt="Imagem do usuário" width="40">';
+        }
+      },
+      { data: 'nome' },
+      { data: 'email' },
+      { 
+        data: 'nivelAcesso',
+        render: function(data, type, row, meta)
+        {
+          return data ==  1 ? 'Normal' : 'Administrador';
+        } 
+      },
+      { 
+        data: null,
+        render: function (data, type, row) {
+          return data.status ? 'Ativo' : 'Inativo';
+        }
+      },
+      {
+        data: null,
+        render: function (data, type, row) {
+          return `
+            <div class="group-icon">
+              <div class="icon">
+                <button type="button" class="btn btn-warning btn-sm editarButton" data-toggle="modal" data-target="#editarModal" data-id="${data.id}" data-nome="${data.nome}" data-email="${data.email}" data-imagem="${data.imagem}"  data-nivelacesso="${data.nivelAcesso}" data-status="${data.status}">
+                  <i class="fas fa-edit"></i>
+                </button>
+              </div>
+              <div class="icon">
+                  <form method="post" >
+                      <button type="submit" class="btn btn-danger btn-sm excluirButton" data-id="${row.id}">
+                          <i class="far fa-trash-alt"></i>
+                      </button>
+                  </form>
+              </div>
+              <div class="icon">
+                <button type="button" class="btn btn-info btn-sm viewButton" data-toggle="modal" data-target="#viewModal" data-id="${data.id}" data-nome="${data.nome}" data-email="${data.email}" data-imagem="${data.imagem}"  data-nivelacesso="${data.nivelAcesso}" data-status="${data.status}">
+                  <i class="far fa-eye"></i>
+                </button>
+              </div>
+            </div>
+          `;
+        }
+      }
+    ]
+  });
+
+
+let button; 
+
+document.querySelector('#example tbody').addEventListener('click', function(event) {
+  button = event.target.closest('.editarButton, .excluirButton, .viewButton');
+  if (!button) return;
+
+  if (button.classList.contains('editarButton')) {
+    // Adicione aqui a lógica para tratar o clique no botão de editar
+    const id = button.getAttribute('data-id');
+    const nome = button.getAttribute('data-nome');
+    const email = button.getAttribute('data-email');
+    const imagem = button.getAttribute('data-imagem');
+    const nivelAcesso = button.getAttribute('data-nivelacesso');
+    const status = button.getAttribute('data-status') === 'true' ? true : false;
+    console.log("status: "+ status)
+    console.log("nivelAcesso: "+ nivelAcesso)
+
+    let modal = document.getElementById('editarModal');
+    modal.querySelector('#editarId').value = id;
+    modal.querySelector('#editarNome').value = nome;
+    modal.querySelector('#editarEmail').value = email;
+    modal.querySelector('#editarImagem').value = '';
+    modal.querySelector('#editarNivelAcesso').selectedIndex = nivelAcesso - 1;
+    modal.querySelector('#editarStatus').checked = status;
+
+  } else if (button.classList.contains('excluirButton')) {
+    event.preventDefault();
+    // Adicione aqui a lógica para tratar o clique no botão de excluir
+    console.log('Botão de excluir clicado');
+    $('#excluirModal').modal('show');
+    document.querySelector('#confirmarExclusaoBtn').setAttribute('data-id', button.dataset.id);
+  }
+  else if(button.classList.contains('viewButton'))
+  {
+    event.preventDefault();
+    // Adicione aqui a lógica para tratar o clique no botão de excluir
+    console.log('Botão de view clicado');
+
+    const id = button.getAttribute('data-id');
+    const nome = button.getAttribute('data-nome');
+    const email = button.getAttribute('data-email');
+    const imagem = button.getAttribute('data-imagem');
+    const nivelAcesso = button.getAttribute('data-nivelacesso');
+    const status = button.getAttribute('data-status') === 'true' ? true : false;
+
+    console.log("id: "+ id)
+    console.log("nome: "+ nome)
+    console.log("email: "+ email)
+    console.log("imagem: "+ imagem)
+    console.log("nivelAcesso: "+ nivelAcesso)
+    console.log("status: "+ status)
+
+    let modal = document.getElementById('viewModal');
+    modal.querySelector('#viewNome').value = nome;
+    modal.querySelector('#viewEmail').value = email;
+    modal.querySelector('#viewImagem').src  = '../img/' + imagem;
+    modal.querySelector('#viewNivelAcesso').selectedIndex = nivelAcesso - 1;
+    modal.querySelector('#viewStatus').checked = status;
+
+  }
+});
+
+document.querySelector('#confirmarExclusaoBtn').addEventListener('click', function(even2t) {
+  even2t.preventDefault();
+  const id = button.dataset.id;
+  let url = `/Home/Excluir/${id}`;
+  fetch(url, {
+    method: 'DELETE'
+  })
+  .then(response => {
+    if (response.status === 204) {
+      $('#excluirModal').modal('hide');
+      tabelaUsuarios.ajax.reload();
+      console.log('Formulário enviado com sucesso!');       
+    } else {
+      console.log("Ocorreu um erro ao excluir os dados.");
+    }
+  })
+  .catch(error => {
+    console.error('Erro ao enviar formulário:', error);
+  });
+});
+
+  document.querySelector('#confirmarAdicionarBtn').addEventListener('click', function(event) {
+    event.preventDefault();
+    console.log("Cadastrarrr");
+    const confirmarAdicionarBtn = event.target;
+    var adicionarForm = confirmarAdicionarBtn.closest("form");
+    const formData = new FormData(adicionarForm);
+
+    fetch(adicionarForm.action, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        if (response.status === 201) 
+        {
+          $('#adicionarModal').modal('hide');
+          tabelaUsuarios.ajax.reload();
+          console.log("Deu certo! Os dados foram cadastrados.");
+        } 
+        else 
+        {
+          console.log("Ocorreu um erro ao cadastrar os dados.");
+        }
+    })
+    .catch(error => console.error(error));
+    });
+
+    document.querySelector('#confirmarEditarBtn').addEventListener('click', function(event) {
+    event.preventDefault();
+    console.log("Editarrr");
+
+    var editarForm = confirmarEditarBtn.closest("form");
+    const formData = new FormData(editarForm);
+
+    fetch(editarForm.action, {
+        method: 'PUT',
+        body: formData
+    })
+    .then(response => {
+        if (response.status === 204) 
+        {
+          $('#editarModal').modal('hide');
+          tabelaUsuarios.ajax.reload();
+          console.log("Deu certo! Os dados foram atualizados.");
+        } 
+        else 
+        {
+          console.log("Ocorreu um erro ao atualizar os dados.");
+        }
+    })
+    .catch(error => console.error(error));
+    });
+
+
+});
+
+
+
+
+
+    </script>
+    <!--
+        <script src="~/js/script.js" asp-append-version="true"></script>
+    -->
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
